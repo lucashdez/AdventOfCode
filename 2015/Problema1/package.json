@@ -1,0 +1,12 @@
+{
+  "main": "main.ts",
+  "scripts": {
+    "start": "tsc-watch main.ts"
+  },
+  "dependencies": {
+    "@types/node": "^18.7.13",
+    "fs": "^0.0.1-security",
+    "tsc-watch": "^5.0.3",
+    "types": "^0.1.1"
+  }
+}
