@@ -1,14 +1,22 @@
 use std::{collections::HashMap, fs};
-fn main()
+fn read_file_filter(filename: String) -> Vec<String>
 {
-    // TODO : Split in functions
-    let content = fs::read_to_string("input/input.txt").expect("SHOULD HAVE READ FILE");
+    let content = fs::read_to_string(format!("input/{filename}")).expect("SHOULD HAVE READ FILE");
     let splitted = content.split('\n');
-    let filtered = splitted.filter(|x| x != &"");
+    let filtered: Vec<&str> = splitted.filter(|x| x != &"").collect();
+    let result = filtered.into_iter().map(|x| x.to_string()).collect();
+    result
+}
 
-    let mut elf_hash: HashMap<i32, Vec<String>> = HashMap::new();
+fn p1(
+    elf_hash: &mut HashMap<i32, Vec<String>>,
+    elf_sum: &mut Vec<i32>,
+    content: &Vec<String>,
+) -> i32
+{
+    let mut max: i32 = 0;
     let mut elf_identifier = 0;
-    for line in filtered
+    for line in content
     {
         if line == "\r"
         {
@@ -29,44 +37,43 @@ fn main()
             elf_hash.insert(elf_identifier, vec![fixedline.to_string()]);
         }
     }
-    let mut elf_sum: Vec<(i32, i32)> = Vec::new();
-
     for key in elf_hash.keys()
     {
-        let k: i32 = key.to_owned();
         let mut sum = 0;
         for val in elf_hash.get(key).unwrap()
         {
             sum += val.parse::<i32>().unwrap();
         }
 
-        elf_sum.push((k, sum))
+        elf_sum.push(sum)
     }
-    // TODO : Get rid of the hardcoding
-    let mut max = 0;
-    for (_k, v) in elf_sum.clone()
+    for v in elf_sum.clone()
     {
         if v >= max
         {
             max = v;
         }
     }
-    println!("P1: {}", max);
-    let mut second = 0;
-    let mut third = 0;
-    for (_k, v) in elf_sum.clone()
-    {
-        if v >= second && v != max
-        {
-            second = v;
-        }
-    }
-    for (_k, v) in elf_sum.clone()
-    {
-        if v >= third && v != max && v != second
-        {
-            third = v;
-        }
-    }
-    println!("P2: {}", max + second + third);
+    max
+}
+
+fn p2(elf_sum: &mut Vec<i32>) -> i32
+{
+    elf_sum.sort();
+    let result =
+        elf_sum[elf_sum.len() - 1] + elf_sum[elf_sum.len() - 2] + elf_sum[elf_sum.len() - 3];
+    result
+}
+
+fn main()
+{
+    let content = read_file_filter("input.txt".to_string());
+    let mut elf_hash: HashMap<i32, Vec<String>> = HashMap::new();
+    let mut elf_sum: Vec<i32> = Vec::new();
+    let p1_result = p1(&mut elf_hash, &mut elf_sum, &content);
+    println!("P1: {}", p1_result);
+    let p2_result = p2(&mut elf_sum);
+    println!("P2: {}", p2_result);
+
+    // TODO : Get rid of the hardcoding
 }
