@@ -117,6 +117,62 @@ fn p1(content: &Vec<String>, points: &HashMap<&str, i8>) -> i32
 fn p2(content: &Vec<String>, points: &HashMap<&str, i8>) -> i32
 {
     let mut result = 0;
+    let mut it = 0;
+    while it < content.len()
+    {
+        let triplet: (&str, &str, &str) = (&content[it], &content[it + 1], &content[it + 2]);
+        let mut v_0: Vec<&str> = Vec::new();
+        let mut v_1: Vec<&str> = Vec::new();
+        let mut v_2: Vec<&str> = Vec::new();
+        for char in triplet.0.chars().as_str().split("")
+        {
+            if v_0.contains(&char) || char == "" || char == "\n" || char == "\r"
+            {
+                continue;
+            }
+            else
+            {
+                v_0.push(char);
+            }
+        }
+        for char in triplet.1.chars().as_str().split("")
+        {
+            if v_1.contains(&char) || char == "" || char == "\n" || char == "\r"
+            {
+                continue;
+            }
+            else
+            {
+                v_1.push(char);
+            }
+        }
+        for char in triplet.2.chars().as_str().split("")
+        {
+            if v_2.contains(&char) || char == "" || char == "\n" || char == "\r"
+            {
+                continue;
+            }
+            else
+            {
+                v_2.push(char);
+            }
+        }
+
+        let mut vectors: Vec<Vec<&str>> = Vec::new();
+        vectors.push(v_0);
+        vectors.push(v_1);
+        vectors.push(v_2);
+        vectors.sort_by(|a, b| b.len().cmp(&a.len()));
+        for char in &vectors[0]
+        {
+            if vectors[1].contains(char) && vectors[2].contains(char)
+            {
+                result += *(points.get(char).unwrap()) as i32;
+                break;
+            }
+        }
+        it += 3;
+    }
     return result;
 }
 
@@ -125,6 +181,8 @@ fn main()
     let content = read_file_filter("input.txt".to_string());
     let mut points: HashMap<&str, i8> = HashMap::new();
     fill_points(&mut points);
-    let p1_result = p1(&content, &points);
+    let p1_result = p1(&content.clone(), &points);
+    let p2_result = p2(&content, &points);
     println!("P1 result: {}", p1_result);
+    println!("P2 result: {}", p2_result);
 }
