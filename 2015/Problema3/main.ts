@@ -1,6 +1,6 @@
-import * as fs from "fs";
+import * as fs from "node:fs";
 const log = console.log;
-const data = fs.readFileSync("input.tst", "utf-8");
+const data = fs.readFileSync("input.txt", "utf-8");
 
 //{{{ House
 class House {
