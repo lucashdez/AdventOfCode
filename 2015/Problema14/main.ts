@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 let data = fs.readFileSync('input.txt', 'utf-8').split('\n').filter(d=>d!=='');
 const re = /(?<NAME>[a-zA-Z]+) can fly (?<SPEED>\d+) km\/s for (?<LIMIT>\d+) seconds, but then must rest for (?<REST>\d+) seconds./;
 let flyers = Object.create(null);

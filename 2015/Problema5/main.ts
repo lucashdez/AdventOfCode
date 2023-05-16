@@ -20,12 +20,57 @@ const aoa = (s: string) => {
     return false;
 };
 
-function main() {
-    let counter = 0;
-    for (const string of dataArr) {
-        if (findRepeated(string) && aoa(string)) counter++;
+const count_different_vowels = (s: string) => {
+    let solution = 0;
+    for (let i = 0; i < s.length; ++i) {
+        if (
+            s.charAt(i) === "a" ||
+            s.charAt(i) === "e" ||
+            s.charAt(i) === "i" ||
+            s.charAt(i) === "o" ||
+            s.charAt(i) === "u"
+        ) {
+            solution++;
+        }
     }
-    console.log(counter);
+    return solution >= 3;
+};
+
+const twoinarow = (s: string) => {
+    for (let i = 0; i < s.length - 1; ++i) {
+        if (s.charAt(i) === s.charAt(i + 1)) return true;
+    }
+    return false;
+};
+
+const forbidden = (s: string) => {
+    return (
+        s.includes("ab") ||
+        s.includes("cd") ||
+        s.includes("pq") ||
+        s.includes("xy")
+    );
+};
+
+function main() {
+    let counter_p2 = 0;
+    let counter_p1 = 0;
+
+    for (const string of dataArr) {
+        if (
+            count_different_vowels(string) &&
+            twoinarow(string) &&
+            !forbidden(string)
+        )
+            counter_p1++;
+    }
+    for (const string of dataArr) {
+        if (findRepeated(string) && aoa(string)) counter_p2++;
+    }
+    console.log(`
+                P1: ${counter_p1},
+                P2: ${counter_p2}
+                `);
 }
 
 main();
