@@ -1,9 +1,8 @@
-const size = 6
 async function draw(readonly arr: number[][]) {
 	let auxstr = "";
-	for (let i = 0; i < size; i++) {
-		for (let j = 0; j < size; j++) {
-			auxstr += arr[i][j]? "█" : " "; 
+	for (let i = 0; i < arr.length; i++) {
+		for (let j = 0; j < arr[i].length; j++) {
+			auxstr += arr[i][j]? "█" : "x"; 
 		}
 		
 		auxstr += "\n";
@@ -13,39 +12,26 @@ async function draw(readonly arr: number[][]) {
 	console.log(auxstr);
 }
 
-function valid(i,j) {
-	return i>=0 && i<size && j>=0 && j<size
+function get_neighboors(arr: number[][], row, col) {
+	let count = 0;
+	for (let i = row-1; i <= row+1; i++) {
+		for(let j = col-1; j <= col+1; j++) {
+			if(arr[i][j] == 1)
+				count += 1;
+		}
+	}
+	
+	return count;
 }
 
-function get_data(readonly grid:number[][], i, j) {
-	if(valid(i, j))
-		return grid[i][j]
-	return 0
-}
-
-function get_sum(readonly grid:number[][], i, j) {
-	let sum = 0;
-
-	sum += get_data(grid, i - 1, j - 1) ;
-	sum += get_data(grid, i - 1, j) ;
-	sum += get_data(grid, i - 1, j + 1) ;
-	sum += get_data(grid, i, j - 1) ;
-	sum += get_data(grid, i, j + 1) ;
-	sum += get_data(grid, i + 1, j - 1) ;
-	sum += get_data(grid, i + 1, j) ;
-	sum += get_data(grid, i + 1, j + 1) ;
-
-	return sum
-}
-
-function update(original: number[][]) {
+function update(original: number[][], internal_size: number) {
 	let newa = original;
-	for(let i = 0; i < size; i++) {
-		for(let j = 0; j < size; j++) {
-			const nn = get_sum(original, i, j);
+	for(let i = 1; i < internal_size + 1; i++) {
+		for(let j = 1; j < internal_size + 1; j++) {
+			const nn = get_neighboors(original, i, j);
 			let state: number;
 			if (original[i][j] == 1) 
-				state = (nn == 2 || nn == 3)? 1 : 0;
+				state = (nn == 3 || nn == 4)? 1 : 0;
 			else 
 				state = (nn == 3)? 1 : 0;
 			newa[i][j] = state;
@@ -54,37 +40,55 @@ function update(original: number[][]) {
 	original = newa;
 }
 
-async function P1(arr: number[][]) {
-	let iter = 4;
+async function P1(arr: number[][], iter: number, internal_size: number) {
 	for (let iterator = 0; iterator < iter; iterator++) {
-		update(arr);
+		update(arr, internal_size);
 		await draw(arr);
 	}
 	let result = arr
-	return arr;
+	return result
 }
 
 function P2() {
+	return []
 }
 
 
 function count(arr: number[][]) {
 	let count = 0;
-	for (let i = 0; i < size; i++)
-		for (let j = 0; j < size; j++)
+	for (let i = 0; i < arr.length; i++)
+		for (let j = 0; j < arr[i].length; j++)
 			count += arr[i][j]? 1 : 0;
 	return count;
 }
 
 
 async function main() {
-	const readed = ".#.#.#\n...##.\n#....#\n..#...\n#.#..#\n####..\n";
+	//fixed data
+	const internal_size = 100;
+	const iterations = 100;
+
+	const decoder = new TextDecoder("utf-8");
+	const readed = decoder.decode(Deno.readFileSync("input.txt"));
 	const data = readed.split("\n").map((line) => line.split("").map((c) => (c === "#")? 1 : 0).filter(d => d.length !== 0));
 
-	let ap1 = await P1(data)
-	let p1_res =  count(ap1);
-	
-	let p2_res =  P2();
+	let windowed_arr: number[][] = [];
+	for(let i = 0; i < internal_size + 2; i++) {
+		let void_arr = []
+		for (let j = 0; j < internal_size + 2; ++j)
+			void_arr.push(0);
+		windowed_arr.push(void_arr);
+	}
+	for(let i = 0; i < internal_size; ++i) 
+		for(let j = 0; j < internal_size; ++j)
+			windowed_arr[i+1][j+1] = data[i][j];
+
+	await(draw(windowed_arr))
+	let ap1 = await P1(windowed_arr, iterations, internal_size)
+	let ap2 = P2();
+
+	let p1_res = count(ap1);
+	let p2_res = count(ap2);
 	console.log(`P1: ${p1_res}\nP2: ${p2_res}`);
 }
 
