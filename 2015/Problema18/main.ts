@@ -7,8 +7,8 @@ async function draw(readonly arr: number[][]) {
 		
 		auxstr += "\n";
 	}
-	await new Promise(r => setTimeout(r, 100));
-	console.clear()
+	await new Promise(resolve => setTimeout(resolve, 50)); 
+	console.clear();
 	console.log(auxstr);
 }
 
@@ -16,7 +16,7 @@ function get_neighboors(arr: number[][], row, col) {
 	let count = 0;
 	for (let i = row-1; i <= row+1; i++) {
 		for(let j = col-1; j <= col+1; j++) {
-			if(arr[i][j] == 1)
+			if(arr[i][j] === 1)
 				count += 1;
 		}
 	}
@@ -24,20 +24,48 @@ function get_neighboors(arr: number[][], row, col) {
 	return count;
 }
 
-function update(original: number[][], internal_size: number) {
-	let newa = original;
+function copy_array(readonly from: number[][], dest: number[][]) {
+	for (let i = 0; i < from.length; ++i)
+		for (let j = 0; j < from[i].length; ++j)
+			dest[i][j] = from[i][j];
+}
+
+function generate_arr(m:number,n:number) {
+	let newarr = []
+	for (let i = 0; i < m; ++i) {
+		let auxarr = []
+		for(let j = 0; j < n; ++j)
+			auxarr.push(0);
+		newarr.push(auxarr);
+	}
+	return newarr;
+}
+
+function update(original: number[][], internal_size: number, stuck: boolean = false) {
+	let newa: number[][] = generate_arr(original.length, original[0].length) ;
+	copy_array(original, newa);
+
 	for(let i = 1; i < internal_size + 1; i++) {
 		for(let j = 1; j < internal_size + 1; j++) {
 			const nn = get_neighboors(original, i, j);
 			let state: number;
-			if (original[i][j] == 1) 
-				state = (nn == 3 || nn == 4)? 1 : 0;
-			else 
-				state = (nn == 3)? 1 : 0;
+			if (original[i][j] === 1) {
+				state = (nn === 3 || nn === 4)? 1 : 0;
+			} 
+			else {
+				state = (nn === 3)? 1 : 0;
+			}
 			newa[i][j] = state;
+			if (stuck) {
+				newa[1][1] = 1;
+				newa[internal_size][internal_size] = 1
+				newa[1][internal_size] = 1
+				newa[internal_size][1] = 1
+				
+			}
 		}
 	}
-	original = newa;
+	copy_array(newa, original)
 }
 
 async function P1(arr: number[][], iter: number, internal_size: number) {
@@ -49,8 +77,13 @@ async function P1(arr: number[][], iter: number, internal_size: number) {
 	return result
 }
 
-function P2() {
-	return []
+async function P2(arr: number[][], iter: number, internal_size: number) {
+	for (let iterator = 0; iterator < iter; iterator++) {
+		update(arr, internal_size, true);
+				await draw(arr);
+	}
+	let result = arr
+	return result
 }
 
 
@@ -83,9 +116,17 @@ async function main() {
 		for(let j = 0; j < internal_size; ++j)
 			windowed_arr[i+1][j+1] = data[i][j];
 
-	await(draw(windowed_arr))
-	let ap1 = await P1(windowed_arr, iterations, internal_size)
-	let ap2 = P2();
+	let windowed_arr_p1 = generate_arr(windowed_arr.length, windowed_arr[0].length);
+	copy_array(windowed_arr, windowed_arr_p1);
+	windowed_arr[1][1] = 1;
+	windowed_arr[internal_size][internal_size] = 1
+	windowed_arr[1][internal_size] = 1
+	windowed_arr[internal_size][1] = 1
+
+
+	draw(windowed_arr);
+	let ap1 = await P1(windowed_arr_p1, iterations, internal_size);
+	let ap2 = await P2(windowed_arr, iterations, internal_size);
 
 	let p1_res = count(ap1);
 	let p2_res = count(ap2);
