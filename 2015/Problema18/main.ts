@@ -4,7 +4,6 @@ async function draw(readonly arr: number[][]) {
 		for (let j = 0; j < arr[i].length; j++) {
 			auxstr += arr[i][j]? "█" : "x"; 
 		}
-		
 		auxstr += "\n";
 	}
 	await new Promise(resolve => setTimeout(resolve, 50)); 
