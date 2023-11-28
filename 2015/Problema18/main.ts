@@ -1,3 +1,4 @@
+const INPUTDATA = 2;
 async function draw(readonly arr: number[][]) {
 	let auxstr = "";
 	for (let i = 0; i < arr.length; i++) {
@@ -127,6 +128,7 @@ async function main() {
 	draw(windowed_arr);
 	let ap1 = await P1(windowed_arr_p1, iterations, internal_size);
 	let ap2 = await P2(windowed_arr, iterations, internal_size);
+
 
 	let p1_res = count(ap1);
 	let p2_res = count(ap2);
