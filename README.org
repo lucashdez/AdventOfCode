@@ -1,7 +1,6 @@
 * BASIC INFO:
 
 *Author:* Lucas Hernández Abreu
-*Links:*
 
 * LANGUAGE LIST
 
