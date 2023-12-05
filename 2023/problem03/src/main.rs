@@ -1,27 +1,39 @@
 use std::fmt::{Display, Formatter};
 
 struct Number {
-	x: u32,
-	y: u32,
-	x_end: u32,
-	y_end: u32,
+	x: i32,
+	y: i32,
+	x_end: i32,
+	y_end: i32,
 	value: u32
 }
 
 impl Number {
-	fn new(x: u32, y: u32, x_end: u32, y_end: u32, value: u32) -> Self {
+	fn new(x: i32, y: i32, x_end: i32, y_end: i32, value: u32) -> Self {
 		Number { x, y, x_end, y_end, value}
 	}
 
-	fn symbol_nearby(&self, input: &[&str]) -> bool {
-		let result: bool = false;
-		return result;
+	fn symbol_nearby(&self, input: &[&str]) -> (bool, char) {
+		for i in self.y-1..=self.y_end+1 {
+			if i >= 0 && (i as usize) < input.len() - 1 {
+				let chars_vec: Vec<char> = input[i as usize].chars().collect();
+				for j in self.x-1..=self.x_end+1 {
+					if j >= 0 && j < (input[i as usize].len() - 1 as usize) as i32 {
+						if !chars_vec[j as usize].is_digit(10)
+							&& chars_vec[j as usize] != '.' {
+								return (true, chars_vec[j as usize]);
+							}
+					} 
+				}
+			}
+		}
+		return (false, '.');
 	}
 }
 
 impl Display for Number {
 	fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}", self.value).expect("Couldn't write to the output stream");
+		write!(f, "({} {}) -> ({} {}): {}", self.x, self.y, self.x_end, self.y_end, self.value).expect("Couldn't write to the output stream");
 		Ok(())
 	}
 }
@@ -29,12 +41,12 @@ impl Display for Number {
 fn generate_numbers(input: &[&str]) -> Vec<Number> {
 	let mut result: Vec<Number> = Vec::new();
 	let mut reading_number: bool = false;
-	let mut j: u32;
-	let mut j_to: u32 = 0;
+	let mut j: i32;
+	let mut j_to: i32 = 0;
 	let mut accum_number_chars: String = String::from("");
-	for i in 0..input.len() as u32 {
+	for i in 0..input.len() as i32 {
 		j = 0;
-		for c in input[0].chars()  {
+		for c in input[i as usize].chars()  {
 			if !reading_number {
 				j_to = j;
 			}
@@ -44,12 +56,17 @@ fn generate_numbers(input: &[&str]) -> Vec<Number> {
 				j_to += 1;
 			} else {
 				if reading_number {
-					result.push(Number::new(j, i, j_to, i, accum_number_chars.parse().unwrap()));
+					let new_number = Number::new(j, i, j_to-1, i, accum_number_chars.parse().unwrap());
+					println!("new_number = {}", &new_number);
+					result.push(new_number);
+					j = j_to;
 				}
 				reading_number = false;
 				accum_number_chars = String::from("");
 			}
-			j += 1;
+			if !reading_number {
+				j += 1;
+			}
 		}
 	}
 	return result;
@@ -59,7 +76,9 @@ fn p1(input: &[&str]) -> u32 {
 	let mut result = 0;
 	let pieces = generate_numbers(input);
 	for piece in pieces.into_iter() {
-		if piece.symbol_nearby(input) {
+		let rbool = piece.symbol_nearby(input);
+		println!("found: {}: for: {}", &rbool.1, piece);
+		if rbool.0 {
 			result += piece.value;
 		}
 	}
