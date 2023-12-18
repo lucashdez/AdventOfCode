@@ -1,4 +1,6 @@
-use std::f64::INFINITY;
+mod lib;
+use lib::maps::*;
+
 
 use regex::Regex;
 enum TransformType {
@@ -142,45 +144,45 @@ impl Maps {
 		seed
 	}
 
-	fn process_range(from: u64, to: u64) -> u64 {
+	fn process_range(from: u64, to: u64, transform_type: TransformType) -> u64 {
 		let mut min: u64 = std::u64::MAX;
 		return min;
 	}
 }	
 
-
-fn p1(map: &Maps) -> u64 {
-	let mut seeds = map.seeds.clone();
-	map.process_one(&mut seeds, TransformType::ToSoil);
-	map.process_one(&mut seeds, TransformType::ToFertilizer);
-	map.process_one(&mut seeds, TransformType::ToWater);
-	map.process_one(&mut seeds, TransformType::ToLight);
-	map.process_one(&mut seeds, TransformType::ToTemperature);
-	map.process_one(&mut seeds, TransformType::ToHumidity);
-	map.process_one(&mut seeds, TransformType::ToLocation);
-	return seeds.into_iter().min().unwrap();
+fn p1(m: RangesMap) -> u64 {
+	let mut locations: Vec<u64> = Vec::new();
+	let mut seeds = m.seeds.clone(); 
+	seeds.into_iter().for_each(|s| {
+		locations.push(m.seed_to_location(s));
+	}); 
+	locations.into_iter().min().unwrap()
 }
 
-fn p2(map: &Maps) -> u64 {
-	let mut seeds_iters = map.seeds.clone();
-	let mut seeds: Vec<u64> = Vec::new();
+fn p2(m: RangesMap) -> u64 {
+	let mut seeds_iters = m.seeds.clone();
+	let mut locations: Vec<u64> = Vec::new();
+	let mut all_ranges: Vec<std::ops::Range<u64>> = Vec::new();
 	let mut i = 0;
 	while i < seeds_iters.len() {
 		let maxit = seeds_iters[i] + seeds_iters[i+1];
 		let minit = seeds_iters[i];
-		let mut min = std::u64::MAX;
-		println!("Generado: {}", i/2);
+		all_ranges.push(minit..maxit);
 		i += 2;
 	}
+
+	for r in all_ranges {
+		locations.push(m.ranges_to_location(r));
+	}
 	
-	return seeds.into_iter().min().unwrap();
+	return locations.into_iter().min().unwrap();
 }
 
 fn main() {
 	let s = std::fs::read_to_string("./src/input.txt").expect("couldn't read the file for test");
-	let map: Maps = Maps::new(s.as_str());
-	let r1 = p1(&map);
-	let r2 = p2(&map);
+	let map: RangesMap = RangesMap::new(s.as_str());
+	let r1 = p1(map.clone());
+	let r2 = p2(map.clone());
 	println!("P1: {}\nP2: {}", r1, r2);
 }
 
@@ -190,14 +192,20 @@ mod test {
 	#[test]
 	fn p1_working() {
 		let s = std::fs::read_to_string("./src/ex.txt").expect("couldn't read the file for test");
-		let map: Maps = Maps::new(s.as_str());
-		assert_eq!(p1(&map),35);
+		let map: RangesMap = RangesMap::new(s.as_str());
+		assert_eq!(p1(map), 35);
+	}
+	#[test]
+	fn p1_test() {
+		let s = std::fs::read_to_string("./src/input.txt").expect("couldn't read the file for test");
+		let map: RangesMap = RangesMap::new(s.as_str());
+		assert_eq!(p1(map), 282277027);
 	}
 	#[test]
 	fn p2_working() {
 		let s = std::fs::read_to_string("./src/ex.txt").expect("couldn't read the file for test");
-		let map: Maps = Maps::new(s.as_str());
-		assert_eq!(p2(&map),46);
+		let map: RangesMap = RangesMap::new(s.as_str());
+		assert_eq!(p2(map),46);
 	}
 }
 
