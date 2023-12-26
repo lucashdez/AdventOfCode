@@ -3,49 +3,59 @@ use lib::{
 	maps::*,
 	parser::*
 };
+use std::ops::Range;
 	
 
-/*fn p1(m: RangesMap) -> u64 {
-	let mut locations: Vec<u64> = Vec::new();
-	let mut seeds = m.seeds.clone(); 
-	seeds.into_iter().for_each(|s| {
-		locations.push(m.seed_to_location(s));
-	}); 
-	locations.into_iter().min().unwrap()
+fn p1(s: &Vec<i64>, m: &Maps) -> i64 {
+	let mut results: Vec<i64> = s.clone();
+	let maps = m.get_maps();
+	let size = maps.len();
+	for vi in 0..results.len() {
+		for i in 0..size {
+			results[vi] = maps[i].intersect_1(results[vi]);
+		}
+	}
+	results.into_iter().min().unwrap()
 }
-*/
 
-/*fn p2(m: RangesMap) -> u64 {
-	let mut seeds_iters = m.seeds.clone();
-	let mut locations: Vec<u64> = Vec::new();
-	let mut all_ranges: Vec<std::ops::Range<u64>> = Vec::new();
+
+fn p2(s: &Vec<i64>, m: &Maps) -> i64 {
+	let mut all_ranges: Vec<Range<i64>> = Vec::new();
+	let mut tmp_ranges: Vec<Range<i64>> = Vec::new();
+	let maps = m.get_maps();
 	let mut i = 0;
-	while i < seeds_iters.len() {
-		let maxit = seeds_iters[i] + seeds_iters[i+1];
-		let minit = seeds_iters[i];
+	while i < s.len() {
+		let maxit = s[i] + s[i+1];
+		let minit = s[i];
 		all_ranges.push(minit..maxit);
 		i += 2;
 	}
 
-	for r in all_ranges {
-		locations.push(m.ranges_to_location(r));
+	for i in 0..maps.len() {
+		for range in &all_ranges {
+			let abc = maps[i].intersect_range(range.clone());
+			if let Some(a) = abc.0 { tmp_ranges.push(a); }
+			if let Some(b) = abc.1 { tmp_ranges.push(b); }
+			if let Some(c) = abc.2 { tmp_ranges.push(c); }
+		}
+		all_ranges.clear();
+		all_ranges.append(&mut tmp_ranges);
 	}
-	
-	return locations.into_iter().min().unwrap();
+	all_ranges.into_iter().min_by(|a,b| {a.start.cmp(&b.start)}).unwrap().start
 }
-*/
+
 
 fn main() {
 	let s = std::fs::read_to_string("./src/input.txt").expect("couldn't read the file for test");
 	let v_s: Vec<&str> = s.split("\n").collect();
 	let mut p: Parser = Parser::new(0); 
-	p.read_seeds(&v_s);
-	p.read_maps(&v_s);
+	let seeds: Vec<i64> = p.read_seeds(&v_s);
+	let maps: Maps = p.read_maps(&v_s);
 	
 
-	//let r1 = p1(map.clone());
-	//let r2 = p2(map.clone());
-	//println!("P1: {}\nP2: {}", r1, r2);
+	let r1 = p1(&seeds, &maps);
+	let r2 = p2(&seeds, &maps); 
+	println!("P1: {}\nP2: {}", r1, r2);
 }
 
 #[cfg(test)]
@@ -54,17 +64,29 @@ mod test {
 	#[test]
 	fn p1_working() {
 		let s = std::fs::read_to_string("./src/ex.txt").expect("couldn't read the file for test");
-		//assert_eq!(p1(map), 35);
+		let v_s: Vec<&str> = s.split("\n").collect();
+		let mut p: Parser = Parser::new(0); 
+		let seeds: Vec<i64> = p.read_seeds(&v_s);
+		let maps: Maps = p.read_maps(&v_s);
+		assert_eq!(p1(&seeds, &maps), 35);
 	}
 	#[test]
 	fn p1_test() {
 		let s = std::fs::read_to_string("./src/input.txt").expect("couldn't read the file for test");
-		//assert_eq!(p1(map), 282277027);
+		let v_s: Vec<&str> = s.split("\n").collect();
+		let mut p: Parser = Parser::new(0); 
+		let seeds: Vec<i64> = p.read_seeds(&v_s);
+		let maps: Maps = p.read_maps(&v_s);
+		assert_eq!(p1(&seeds, &maps), 282277027);
 	}
 	#[test]
 	fn p2_working() {
 		let s = std::fs::read_to_string("./src/ex.txt").expect("couldn't read the file for test");
-		//assert_eq!(p2(map),46);
+		let v_s: Vec<&str> = s.split("\n").collect();
+		let mut p: Parser = Parser::new(0); 
+		let seeds: Vec<i64> = p.read_seeds(&v_s);
+		let maps: Maps = p.read_maps(&v_s);
+		assert_eq!(p2(&seeds, &maps),46);
 	}
 }
 
