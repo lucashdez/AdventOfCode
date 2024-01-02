@@ -8,7 +8,7 @@
  * High card, where all cards' labels are distinct: 23456
  */
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Debug, PartialOrd, Ord)]
 enum HandType {
 	FiveOfAKind,
 	FourOfAKind,
@@ -37,6 +37,19 @@ pub struct Hand {
 	value: usize,
 }
 
+impl std::fmt::Debug for Hand {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+		write!(f, "(\nhand: {}\ntype: {:?}\nbid: {}\n)",
+			   self.hand.clone()
+			   .into_iter()
+			   .map(|(x,_)| x)
+			   .collect::<Vec<char>>().iter().collect::<String>(),
+			   self.t,
+			   self.value);
+		Ok(())
+	}
+}
+
 impl Hand {
 	pub fn new(s: &str, value: usize) -> Self {
 		Hand {
@@ -44,6 +57,10 @@ impl Hand {
 			t: HandType::Unkown,
 			value
 		}
+	}
+
+	pub fn get_value(&self) -> usize {
+		self.value
 	}
 
 	pub fn check_hand(&mut self) {
@@ -56,13 +73,27 @@ impl Hand {
 
 		let mut vec_of_values: Vec<usize> = h.into_values().collect();
 		vec_of_values.sort();
+		let view = vec_of_values.clone();
 
 		
 		for v in vec_of_values.into_iter() {
 			match v {
 				5 => { final_type = HandType::FiveOfAKind; break; },
 				4 => { final_type = HandType::FourOfAKind; break; },
-				3 | 2 => { }
+				3 => {
+					if view[1] == 2 {
+						final_type = HandType::FullHouse; break;
+					} else {
+						final_type = HandType::ThreeOfAKind; break;
+					}
+				}
+				2 => {
+					if view[1] == 2 {
+						final_type = HandType::TwoPair; break;
+					} else {
+						final_type = HandType::OnePair; break;
+					}
+				}
 				_ => { final_type = HandType::HighCard },
 			}
 		}
@@ -86,11 +117,27 @@ impl std::cmp::PartialOrd for Hand {
 impl std::cmp::Ord for Hand {
 	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
 		let mut i = 0;
-		loop {
-			if self.hand[i] != other.hand[i] {
-				break;
+		if self.t != other.t {
+			return other.t.cmp(&self.t);
+		} else if self.t == other.t && self.t == HandType::HighCard {
+			let mut self_sorted = self.hand.clone();
+			let mut other_sorted = other.hand.clone();
+			self_sorted.sort_by(|x, y| {y.1.cmp(&x.1)});
+			other_sorted.sort_by(|x, y| {y.1.cmp(&x.1)});
+			for i in 0..5 {
+				if self_sorted[i] > other_sorted[i] {
+					return std::cmp::Ordering::Greater;
+				} else if self_sorted[i] < other_sorted[i] {
+					return std::cmp::Ordering::Less;
+				}
 			}
-			i += 1;
+		} else {
+			loop {
+				if self.hand[i] != other.hand[i] {
+					break;
+				}
+				i += 1;
+			}
 		}
 		self.hand[i].1.cmp(&other.hand[i].1)
 	}

@@ -17,13 +17,21 @@ fn p1(s: &str) -> u64 {
 		hands[i].check_hand();
 	}
 	hands.sort();
-	0
+	dbg!(&hands);
+	hands.into_iter()
+		.enumerate()
+		.map(|(pos, h)| {
+			(h.get_value() * (pos + 1)) as u64
+		}).sum()
+
 }
 
 fn main() {
 	let str = std::fs::read_to_string("./src/input.txt")
 		.expect("Cannot read. Bad luck.");
-	p1(str.as_str());
+	let r1 = p1(str.as_str());
+	println!("P1: {}\nP2: {}", r1, 0);
+
 }
 
 
@@ -32,6 +40,8 @@ mod test {
 	use super::*;
 	#[test]
 	fn p1_working() {
-		assert_eq!(p1(), 6440);
+		let str = std::fs::read_to_string("./src/ex.txt")
+			.expect("Cannot read. Bad luck.");
+		assert_eq!(p1(str.as_str()), 6440);
 	}
 }
