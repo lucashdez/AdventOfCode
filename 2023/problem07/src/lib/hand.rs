@@ -45,7 +45,7 @@ impl std::fmt::Debug for Hand {
 			   .map(|(x,_)| x)
 			   .collect::<Vec<char>>().iter().collect::<String>(),
 			   self.t,
-			   self.value);
+			   self.value).unwrap();
 		Ok(())
 	}
 }
@@ -114,31 +114,45 @@ impl std::cmp::PartialOrd for Hand {
 	}
 }
 
+
+/**
+This is the sorting i need
+impl Ord for Hand {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.hand_type.cmp(&other.hand_type) {
+            Ordering::Less => Ordering::Less,
+            Ordering::Greater => Ordering::Greater,
+            Ordering::Equal => {
+                for (a, b) in zip(self.cards, other.cards) {
+                    if a != b {return a.cmp(&b)}
+                }
+                Ordering::Equal
+            }
+        }
+    }
+}
+*/
 impl std::cmp::Ord for Hand {
+	/**
+	 * zip(a,b):
+	 * a = [1,2,3]
+	 * b = [4,5,6]
+	 * zip -> [(1,4), (2,5), (3,6)]
+	 */
 	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		let mut i = 0;
 		if self.t != other.t {
 			return other.t.cmp(&self.t);
-		} else if self.t == other.t && self.t == HandType::HighCard {
-			let mut self_sorted = self.hand.clone();
-			let mut other_sorted = other.hand.clone();
-			self_sorted.sort_by(|x, y| {y.1.cmp(&x.1)});
-			other_sorted.sort_by(|x, y| {y.1.cmp(&x.1)});
-			for i in 0..5 {
-				if self_sorted[i] > other_sorted[i] {
-					return std::cmp::Ordering::Greater;
-				} else if self_sorted[i] < other_sorted[i] {
-					return std::cmp::Ordering::Less;
-				}
-			}
 		} else {
-			loop {
-				if self.hand[i] != other.hand[i] {
-					break;
+			for i in 0..5 {
+				if self.hand[i].1 > other.hand[i].1 {
+					return std::cmp::Ordering::Greater;
+				} else if self.hand[i].1 < other.hand[i].1 {
+					return std::cmp::Ordering::Less;
+				} else {
+					continue;
 				}
-				i += 1;
 			}
 		}
-		self.hand[i].1.cmp(&other.hand[i].1)
+		unreachable!()
 	}
 }

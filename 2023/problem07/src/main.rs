@@ -18,12 +18,12 @@ fn p1(s: &str) -> u64 {
 	}
 	hands.sort();
 	dbg!(&hands);
-	hands.into_iter()
-		.enumerate()
-		.map(|(pos, h)| {
-			(h.get_value() * (pos + 1)) as u64
-		}).sum()
-
+	let max_len = hands.len();
+	let mut result: u64 = 0; 
+	for i in 0..max_len {
+		result += ((i+1) * hands[i].get_value()) as u64;
+	}
+	return result;
 }
 
 fn main() {
