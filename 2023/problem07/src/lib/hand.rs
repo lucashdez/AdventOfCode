@@ -97,7 +97,6 @@ impl Hand {
 				_ => { final_type = HandType::HighCard },
 			}
 		}
-
 		self.t = final_type;
 	}
 }
@@ -140,18 +139,14 @@ impl std::cmp::Ord for Hand {
 	 * zip -> [(1,4), (2,5), (3,6)]
 	 */
 	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		if self.t != other.t {
-			return other.t.cmp(&self.t);
-		} else {
-			for i in 0..5 {
-				if self.hand[i].1 > other.hand[i].1 {
-					return std::cmp::Ordering::Greater;
-				} else if self.hand[i].1 < other.hand[i].1 {
-					return std::cmp::Ordering::Less;
-				} else {
-					continue;
-				}
+		if self.t == other.t {
+			for (a,b) in self.hand.iter().zip(other.hand.iter()) {
+				if a.1 != b.1 {
+					return a.1.cmp(&b.1);
+				} else { continue; }
 			}
+		} else {
+			return other.t.cmp(&self.t);
 		}
 		unreachable!()
 	}
