@@ -17,35 +17,43 @@ enum HandType {
 	TwoPair,
 	OnePair,
 	HighCard,
-	Unkown
+	Unknown
 }
 
-fn get_card_value(c: char) -> usize {
+fn get_card_value(c: char, jokers: bool) -> usize {
 	//  A, K, Q, J, T, 9, 8, 7, 6, 5, 4, 3, 2
 	// 13,12,11,10, 9, 8, 7, 6, 5, 4, 3, 2, 1
-	match c {
-		'A' => 13, 'K' => 12, 'Q' => 11, 'J' => 10, 'T' => 9, '9' => 8, '8' => 7,
-		'7' => 6, '6' => 5, '5' => 4, '4' => 3, '3' => 2, '2' => 1,
-		_ => 0
+	if !jokers {
+		match c {
+			'A' => 13, 'K' => 12, 'Q' => 11, 'J' => 10, 'T' => 9, '9' => 8, '8' => 7,
+			'7' => 6, '6' => 5, '5' => 4, '4' => 3, '3' => 2, '2' => 1,
+			_ => 0
+		}
+	} else {
+		match c {
+			'A' => 13, 'K' => 12, 'Q' => 11, 'J' => 0, 'T' => 9, '9' => 8, '8' => 7,
+			'7' => 6, '6' => 5, '5' => 4, '4' => 3, '3' => 2, '2' => 1,
+			_ => 0
+		}
 	}
+	
 }
 
 #[derive(Eq)]
 pub struct Hand {
-	hand: Vec<(char, usize)>,
+	hand: [usize;5],
 	t: HandType,
-	value: usize,
+	bid: usize,
 }
 
 impl std::fmt::Debug for Hand {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-		write!(f, "(\nhand: {}\ntype: {:?}\nbid: {}\n)",
-			   self.hand.clone()
-			   .into_iter()
-			   .map(|(x,_)| x)
-			   .collect::<Vec<char>>().iter().collect::<String>(),
+		write!(f, "(\nhand: {:?}\ntype: {:?}\nbid: {}\n)",
+			   self.hand,
 			   self.t,
-			   self.value).unwrap();
+			   self.bid
+		)
+			.unwrap();
 		Ok(())
 	}
 }
@@ -53,51 +61,77 @@ impl std::fmt::Debug for Hand {
 impl Hand {
 	pub fn new(s: &str, value: usize) -> Self {
 		Hand {
-			hand: s.chars().map(|c| {return (c, get_card_value(c))}).collect(),
-			t: HandType::Unkown,
-			value
+			hand: s.chars().map(|c| {return get_card_value(c, false)}).collect::<Vec<usize>>().try_into().unwrap(),
+			t: HandType::Unknown,
+			bid: value
 		}
 	}
 
-	pub fn get_value(&self) -> usize {
-		self.value
+	pub fn new_p2(s: &str, value: usize) -> Self {
+		Hand {
+			hand: s.chars().map(|c| {return get_card_value(c, true)}).collect::<Vec<usize>>().try_into().unwrap(),
+			t: HandType::Unknown,
+			bid: value
+		}
+	}
+
+	pub fn get_bid(&self) -> usize {
+		self.bid
 	}
 
 	pub fn check_hand(&mut self) {
-		let mut final_type: HandType = HandType::Unkown;
-		let mut h: std::collections::HashMap<char, usize> = std::collections::HashMap::new();
+		let mut h: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
 		let cop = self.hand.clone();
 		for card in cop {
-			h.entry(card.0).and_modify(|v| *v += 1).or_insert(1);
+			h.entry(card).and_modify(|v| *v += 1).or_insert(1);
 		}
-
 		let mut vec_of_values: Vec<usize> = h.into_values().collect();
-		vec_of_values.sort();
-		let view = vec_of_values.clone();
+		vec_of_values.sort_by(|a,b| b.cmp(&a));
+		if vec_of_values[0] == 5 {
+			self.t = HandType::FiveOfAKind;
+		} else if vec_of_values[0] == 4 {
+			self.t = HandType::FourOfAKind;
+		} else if vec_of_values[0] == 3 {
+			self.t = if vec_of_values[1] == 2 {HandType::FullHouse} else {HandType::ThreeOfAKind};
+		} else if vec_of_values[0] == 2 {
+			self.t = if vec_of_values[1] == 2 {HandType::TwoPair} else {HandType::OnePair};
+		} else {
+			self.t = HandType::HighCard;
+		}
+	}
 
-		
-		for v in vec_of_values.into_iter() {
-			match v {
-				5 => { final_type = HandType::FiveOfAKind; break; },
-				4 => { final_type = HandType::FourOfAKind; break; },
-				3 => {
-					if view[1] == 2 {
-						final_type = HandType::FullHouse; break;
-					} else {
-						final_type = HandType::ThreeOfAKind; break;
-					}
-				}
-				2 => {
-					if view[1] == 2 {
-						final_type = HandType::TwoPair; break;
-					} else {
-						final_type = HandType::OnePair; break;
-					}
-				}
-				_ => { final_type = HandType::HighCard },
+	pub fn check_hand_p2(&mut self) {
+		let mut h: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
+		let cop = self.hand.clone();
+		let mut number_of_jokers = 0;
+		for card in cop {
+			if card != 0 {
+				h.entry(card).and_modify(|v| *v += 1).or_insert(1);
+			} else {
+				number_of_jokers += 1
 			}
 		}
-		self.t = final_type;
+		let mut vec_of_values: Vec<usize> = h.into_values().collect();
+		vec_of_values.sort_by(|a,b| b.cmp(&a));
+		if vec_of_values.len() == 0 {
+			self.t = HandType::FiveOfAKind;
+			return;
+		}
+		if vec_of_values[0] + number_of_jokers == 5 {
+			self.t = HandType::FiveOfAKind;
+		} else if vec_of_values[0] + number_of_jokers == 4 {
+			self.t = HandType::FourOfAKind;
+		} else if vec_of_values[0] == 3 {
+			self.t = if vec_of_values[1] + number_of_jokers == 2 {HandType::FullHouse} else {HandType::ThreeOfAKind};
+		} else if vec_of_values[0] + number_of_jokers == 3 {
+			self.t = if vec_of_values[1] == 2 {HandType::FullHouse} else {HandType::ThreeOfAKind};
+		} else if vec_of_values[0] == 2 {
+			self.t = if vec_of_values[1] + number_of_jokers == 2 {HandType::TwoPair} else {HandType::OnePair};
+		} else if vec_of_values[0] + number_of_jokers == 2 {
+			self.t = if vec_of_values[1] == 2 {HandType::TwoPair} else {HandType::OnePair};
+		} else {
+			self.t = HandType::HighCard;
+		}
 	}
 }
 
@@ -139,15 +173,9 @@ impl std::cmp::Ord for Hand {
 	 * zip -> [(1,4), (2,5), (3,6)]
 	 */
 	fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-		if self.t == other.t {
-			for (a,b) in self.hand.iter().zip(other.hand.iter()) {
-				if a.1 != b.1 {
-					return a.1.cmp(&b.1);
-				} else { continue; }
-			}
-		} else {
+		if self.t != other.t {
 			return other.t.cmp(&self.t);
-		}
-		unreachable!()
+		} 
+		self.hand.cmp(&other.hand)
 	}
 }
