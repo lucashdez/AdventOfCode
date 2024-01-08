@@ -50,6 +50,7 @@ impl Node {
 	}
 }
 
+#[derive(Clone)]
 pub struct GraphTraverser {
 	gnome: Link<Node>,
 	node_count: usize,
@@ -98,8 +99,6 @@ impl GraphTraverser {
 					node.borrow_mut().set(right_node, Direction::Right);
 				}
 			});
-		first_node = all_rules.get("AAA")
-			.expect("Impossible").clone();
 		GraphTraverser {
 			gnome: first_node,
 			node_count: all_rules.len(),
@@ -131,9 +130,27 @@ impl GraphTraverser {
 		}
 		None
 	}
+
+	pub fn get_travelers(&self) -> Vec<GraphTraverser> {
+		let mut ve: Vec<GraphTraverser> = Vec::new();
+		for (k,v) in self.graph.clone().into_iter() {
+			if k.ends_with('A') {
+				let mut new_traveler: GraphTraverser = self.clone();
+				new_traveler.gnome = v;
+				ve.push(new_traveler);
+			}
+		}
+		return ve;
+	}
 }
 
 impl std::fmt::Display for GraphTraverser {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+		write!(f, "actual: {:?}", self.gnome)
+	}
+}
+
+impl std::fmt::Debug for GraphTraverser {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
 		write!(f, "actual: {:?}", self.gnome)
 	}
