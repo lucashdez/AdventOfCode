@@ -59,7 +59,7 @@ pub struct GraphTraverser {
 
 impl GraphTraverser {
 	// {{{ new (rules: &str)
-	pub fn new(rules: &str) -> Self {
+	pub fn new(rules: &str, part_2: bool) -> Self {
 		let mut first_node: Link<Node> = None;
 		let mut all_rules: HashMap<String, Link<Node>> = HashMap::<String, Link<Node>>::new();
 		rules
@@ -99,6 +99,7 @@ impl GraphTraverser {
 					node.borrow_mut().set(right_node, Direction::Right);
 				}
 			});
+		first_node = all_rules.get("AAA").unwrap_or(&None).clone();
 		GraphTraverser {
 			gnome: first_node,
 			node_count: all_rules.len(),
@@ -129,6 +130,23 @@ impl GraphTraverser {
 			}
 		}
 		None
+	}
+
+	pub fn traverse_one(&mut self, d: Direction) {
+		let mut next_node: Link<Node> = None;
+		match d {
+			Direction::Left => {
+				next_node = self.gnome.clone().unwrap().borrow().left.clone();
+			}
+			Direction::Right => {
+				next_node = self.gnome.clone().unwrap().borrow().right.clone();
+			}
+		}
+		self.gnome = next_node;
+	}
+
+	pub fn ends_with_Z(&self) -> bool {
+		self.gnome.clone().unwrap().borrow().name().ends_with('Z')
 	}
 
 	pub fn get_travelers(&self) -> Vec<GraphTraverser> {
