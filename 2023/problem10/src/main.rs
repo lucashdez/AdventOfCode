@@ -2,10 +2,9 @@ mod lib;
 use lib::{me::*, map::*};
 
 fn p1(s: &str) -> usize {
-	let mut start: Coord = (0, 0) ;
 	let map: Map = Map::new(s);
-
-	let mut act_pos = map.get_start();
+	let mut me: Me = Me::new(map.get_start());
+	dbg!(map);
 	0
 }
 
