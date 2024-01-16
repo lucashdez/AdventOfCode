@@ -4,7 +4,7 @@ use lib::{me::*, map::*};
 fn p1(s: &str) -> usize {
 	let map: Map = Map::new(s);
 	let mut me: Me = Me::new(map.get_start());
-	dbg!(map);
+	me.traverse(&map, Conection::NE, 0);
 	0
 }
 
