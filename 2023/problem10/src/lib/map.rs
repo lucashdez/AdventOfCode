@@ -48,7 +48,7 @@ impl Map {
 		for i in 0..self.map.len() {
 			for j in 0..self.map[i].len() {
 				if self.map[i][j] == Conection::Start {
-					return (i,j);
+					return (i as isize, j as isize);
 				}
 			}
 		}
@@ -56,7 +56,20 @@ impl Map {
 	}
 
 	pub fn get(&self, c: Coord) -> &Conection {
-		&self.map[c.0][c.1]
+		&self.map[c.0 as usize][c.1 as usize]
+	}
+
+	pub fn max_i(&self) -> isize {
+		self.map.len() as isize
+	}
+
+	pub fn max_j(&self) -> isize {
+		self.map[0].len() as isize
+	}
+
+	pub fn set_start(&mut self, c: Conection) {
+		let st = self.get_start();
+		self.map[st.0 as usize][st.1 as usize] = c;
 	}
 }
 
@@ -64,7 +77,7 @@ impl Map {
 impl std::fmt::Display for Map {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
 
-		let mut s: String = String::from("");
+		let mut s: String = String::from("\n");
 		for line in self.map.iter() {
 			for c in line.iter() {
 				s.push(Map::get_char(c));
@@ -78,7 +91,7 @@ impl std::fmt::Display for Map {
 
 impl std::fmt::Debug for Map {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-		let mut s: String = String::from("");
+		let mut s: String = String::from("\n");
 		for line in self.map.iter() {
 			for c in line.iter() {
 				s.push(Map::get_char(c));
