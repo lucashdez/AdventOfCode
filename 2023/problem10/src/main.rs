@@ -21,41 +21,38 @@ fn p1(s: &str) -> (isize, (Conection, Movement)) {
 	(res.1/2, (Conection::Ground, (0,0)))
 }
 
-fn p2(s: &str, c: &mut Conection, m: &mut Movement) -> isize{
+trait Interior {
+	fn picks(&self, boundary: usize) -> usize;
+}
+
+impl Interior for usize {
+	fn picks(&self, boundary: usize) -> usize {
+		self + 1 - boundary / 2
+	}
+}
+
+trait Area {
+	fn shoelace(&self) -> usize;
+}
+
+impl Area for Vec<(isize, isize)> {
+	fn shoelace(&self) -> usize {
+		(self
+		 .windows(2)
+		 .fold(0, |acc, matrix| 
+			   acc + (matrix[0].0 * matrix[1].1) - (matrix[0].1 * matrix[1].0)
+		 ) / 2).abs() as usize
+	}
+}
+
+fn p2(s: &str, c: &mut Conection, m: &mut Movement) -> usize {
 	let mut map: Map = Map::new(s);
 	let mut me: Me = Me::new(map.get_start());
-	let mut path: Vec<(usize,usize)> = Vec::new();
+	let mut path: Vec<(isize,isize)> = Vec::new();
+	path.push(me.get_pos());
 	me.reg_travel(&map, &mut path, c, m);
-
-	let my = map.max_i();
-	let mx = map.max_j();
-
-	let mut count = 0;
-	let mut str: String = String::from("\n");
-	let mut contained = false;
-	let mut cantcontainmore = false;
-	for i in 0..my as usize {
-		contained = false;
-		cantcontainmore = false;
-		for j in 0..mx as usize {
-			if path.contains(&(i,j)) {
-				if !contained {
-					cantcontainmore = true;
-				}
-				contained = true;
-				str.push('-')
-			} else if contained && !cantcontainmore {
-				str.push('i')
-			}
-			else {
-				contained = false;
-				str.push(' ')
-			}
-		}
-		str.push('\n')
-	}
-	println!("{}", str);
-	count
+	path.push(me.get_pos());
+	path.shoelace().picks(path.len()-1)
 }
 
 fn main() {
@@ -83,8 +80,38 @@ mod test {
 
 	#[test]
 	fn test_c_3() {
-		let ti3 = "FF7FSF7F7F7F7F7F---7\nL|LJ||||||||||||F--J\nFL-7LJLJ||||||LJL-77\nF--JF--7||LJLJ7F7FJ-\nL---JF-JLJ.||-FJLJJ7\n|F|F-JF---7F7-L7L|7|\n|FFJF7L7F-JF7|JL---7\n7-L-JL7||F7|L7F-7F7|\nL.L7LFJ|||||FJL7||LJ\nL7JLJL-JLJLJL--JLJ.L\n";
-		let mut r1 = p1(ti3);
-		assert_eq!(p2(ti3, &mut r1.1.0, &mut r1.1.1), 10)
+		let ti3 = "...........
+.S-------7.
+.|F-----7|.
+.||.....||.
+.||.....||.
+.|L-7.F-J|.
+.|..|.|..|.
+.L--J.L--J.
+...........";
+	let mut r1 = p1(ti3);
+		assert_eq!(p2(ti3, &mut r1.1.0, &mut r1.1.1), 4);
+	}
+	#[test]
+	fn test_c_4() {
+		let ti1 = ".....\n.S-7.\n.|.|.\n.L-J.\n.....";
+		let mut r1 = p1(ti1);
+		assert_eq!(p2(ti1, &mut r1.1.0, &mut r1.1.1), 1);
+	}
+
+	#[test]
+	fn test_c_5() {
+		let ti5 = "FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L";
+		let mut r5 = p1(ti5);
+		assert_eq!(p2(ti5, &mut r5.1.0, &mut r5.1.1), 10)
 	}
 }

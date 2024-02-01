@@ -40,6 +40,10 @@ impl Me {
 		}
 	}
 
+	pub fn get_pos(&self) -> Coord {
+		self.pos
+	}
+
 	fn mov(&mut self,map: &Map, start: &Coord, prev: &mut Movement, act: &mut Conection) -> (bool, isize) {
 		let mut count = 0;
 		loop {
@@ -62,13 +66,12 @@ impl Me {
 	pub fn traverse(&mut self, map: &Map, actual_conection: &mut Conection, prev: &mut Movement) -> (bool, isize) {
 		let start = self.pos;
 		let count = self.mov(map, &start, prev, actual_conection);
-		dbg!(&count);
 		count
 	}
-
-	pub fn reg_travel(&mut self, map: &Map, reg: &mut Vec<(usize, usize)>, act: &mut Conection, prev: &mut Movement) {
+	
+	pub fn reg_travel(&mut self, map: &Map, reg: &mut Vec<(isize, isize)>, act: &mut Conection, prev: &mut Movement) {
 		let start = self.pos;
-		reg.push((start.0 as usize, start.1 as usize));
+		reg.push((start.0, start.1));
 		let mut count = 0;
 		loop {
 			let mov = Conection::next_position(&prev, act);
@@ -76,7 +79,7 @@ impl Me {
 			if self.pos == start {
 				break;
 			} else {
-				reg.push((self.pos.0 as usize, self.pos.1 as usize));
+				reg.push((self.pos.0, self.pos.1));
 				*prev = mov;
 				*act = map.get(self.pos).clone();
 			}	
