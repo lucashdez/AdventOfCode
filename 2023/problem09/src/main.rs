@@ -13,7 +13,7 @@ fn diff(list: &mut Vec<isize>) -> Vec<isize> {
 			result.insert(0, d);
 			result
 		},
-		_ => todo!()
+		_ => unreachable!()
 	}
 }
 fn rec_calc(list: &mut Vec<isize>) -> Vec<Vec<isize>> {

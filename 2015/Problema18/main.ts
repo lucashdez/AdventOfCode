@@ -102,7 +102,7 @@ async function main() {
 	const iterations = 100;
 
 	const decoder = new TextDecoder("utf-8");
-	const readed = decoder.decode(Deno.readFileSync("input.txt"));
+	const readed = decoder.decode(Deno.readFileSync("test.txt"));
 	const data = readed.split("\n").map((line) => line.split("").map((c) => (c === "#")? 1 : 0).filter(d => d.length !== 0));
 
 	let windowed_arr: number[][] = [];
