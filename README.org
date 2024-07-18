@@ -4,7 +4,7 @@
 
 * LANGUAGE LIST
 
-*2015*: =Typescript=
+*2015*: =Typescript | Haskell=
 *2016:* =Haskell=
 *2017:* =Rust=
 *2018:* =Lua=
