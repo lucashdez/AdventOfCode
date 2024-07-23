@@ -2,12 +2,11 @@
 
 
 (defn magic-missile [state]
-  (def newstate {:e (get state :e),
-                 :php (get state :php),
-                 :bhp (- (get state :bhp) 4)
-                 :bdmg (get state :bdmg),
-                 :mana (- (get state :mana) 53)})
-  newstate) 
+  [(get state 0)
+   (get state 1)
+   (- (get state 2) 4)
+   (get state 3)
+   (- (get state 4) 53)])
 
 (defn log [state]
   (do
@@ -16,47 +15,44 @@
 
 
 (defn drain [state]
-  (def newstate {:e (get state :e),
-                 :php (+ (get state :php) 2),
-                 :bhp (- (get state :bhp) 2),
-                 :bdmg (get state :bdmg),
-                 :mana (- (get state :mana) 73)})
-  newstate) 
+  [(get state 0)
+   (+ (get state 1) 2)
+   (- (get state 2) 2)
+   (get state 3)
+   (- (get state 4) 73)])
 
 (defn shield [state]
-  (def newstate {:e {:poison (get (get state :e) :poison),
-                     :shield (seq (concat (get (get state :e) :shield) (repeat 6 1))),
-                     :recharge (get (get state :e) :recharge)},
-                 :php (get state :php),
-                 :bhp (get state :bhp),
-                 :bdmg (get state :bdmg),
-                 :mana (- (get state :mana) 113)})
-  newstate) 
+  [[(get (get state 0) 0)
+    (seq (concat (get (get state 0) 1) (repeat 6 1)))
+    (get (get state 0) 2)]
+   (get state 1)
+   (get state 2)
+   (get state 3)
+   (- (get state 4) 113)]) 
 
 
 (defn poison [state]
-  (def newstate {:e {:poison (seq (concat (get (get state :e) :poison) (repeat 6 1))),
-                     :shield (get (get state :e) :shield),
-                     :recharge (get (get state :e) :recharge)},
-                 :php (get state :php),
-                 :bhp (get state :bhp),
-                 :bdmg (get state :bdmg),
-                 :mana (- (get state :mana) 173)})
-  newstate) 
+  [[(seq (concat (get (get state 0) 0) (repeat 6 1)))
+    (get (get state 0) 1)
+    (get (get state 0) 2)]
+   (get state 1)
+   (get state 2)
+   (get state 3)
+   (- (get state 4) 173)]) 
 
 
 (defn recharge [state]
-  (def newstate {:e {:poison (get (get state :e) :poison),
-                     :shield (get (get state :e) :shield),
-                     :recharge (seq (concat (get (get state :e) :recharge) (repeat 5 1)))},
-                 :php (get state :php),
-                 :bhp (get state :bhp),
-                 :bdmg (get state :bdmg),
-                 :mana (- (get state :mana) 229)})
-  newstate) 
+    [[(get (get state 0) 0)
+      (get (get state 0) 1)
+      (seq (concat (get (get state 0) 2) (repeat 5 1)))]
+     (get state 1)
+     (get state 2)
+     (get state 3)
+     (- (get state 4) 229)]
+) 
 
 (defn apply_effects [state]
-  (def newstate [[(rest (get (get state 0) 0))
+  [[(rest (get (get state 0) 0))
                    (rest (get (get state 0) 1))
                    (rest (get (get state 0) 2))]
                  (get state 1)
@@ -64,15 +60,13 @@
                  (if (= (get (get state 0) 1) ()) 8 1)
                  (+ (get state 4) (if (= (get (get state 0) 2) ()) 0 101))
                  ])
-  newstate)
 
 (defn boss_attacks [state]
-  (def newstate [(get state 0)
-                 (- (get state 1) (get state 3))
-                 (get state 2)
-                 (get state 3)
-                 (get state 4)])
-  newstate)
+  [(get state 0)
+   (- (get state 1) (get state 3))
+   (get state 2)
+   (get state 3)
+   (get state 4)])
 
 (defn permutation [xs]
   (if (= (count xs) 1)
@@ -81,7 +75,7 @@
 
 (defn available_spells_at_tick [mana]
   (if (>= mana 229)
-    (set [recharge poison shield drain magic-missile]))
+    (set [recharge poison shield drain magic-missile])
     (if (>= mana 173)
       (set [poison shield drain magic-missile])
       (if (>= mana 113)
@@ -90,21 +84,39 @@
           (set [drain magic-missile])
           (if (>= mana 53)
             [magic-missile]
-            [])))))
+            []))))))
 
 (defn tick [state myturn spells]
-  (do
-    (def after_e (apply_effects state))
-    (boss_attacks after_e)
-    (boss_attacks after_e)
+  (let [after_e (apply_effects state)]
+    (if (and (> (get after_e 1) 0)
+             (> (get after_e 2) 0))
+                                        ; ALL ALIVE
+      (if (= myturn true)
+                                        ; MY TURN
+        (for [spell (available_spells_at_tick (get after_e 4))]
+          (if (= spell ())
+            -1
+            (tick (spell after_e) (not myturn) spells)
+            )
+          )
+                                        ; BOSS TURN
+        (tick (boss_attacks after_e) (not myturn) spells)
+        )
+                                        ; ONE DEAD
+      (if (<= (get after_e 2) 0)
+                                        ; BOSS DEAD
+        (get after_e 4)
+                                        ; ME DEAD
+        -1
+        )
+      )
     )
   )
 
 (defn main []
-  (do
-    (def effects [() () ()]) 
-    (def spells [magic-missile drain shield poison recharge])
-   (def game_state [effects 10 13 8 250])
-   (def res (tick game_state true spells))
-   res
-   ))
+  (let [spells [magic-missile drain shield poison recharge]
+        ;game_state [[() () ()] 50 55 8 500]
+        game_state [[() () ()] 10 13 8 500]
+        ]
+   (filter (fn [x] (> x 0))(flatten (tick game_state true spells))))
+   )
