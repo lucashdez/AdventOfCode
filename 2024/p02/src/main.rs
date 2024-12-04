@@ -31,6 +31,7 @@ fn main() {
 		}
 
 		if all_decreasing {
+
 			if v[i].windows(2).all(|pair| {
 				let diff = pair[0] - pair[1];
 				diff >= 1 && diff <= 3
@@ -44,10 +45,32 @@ fn main() {
 	//P2
 	let mut sum2 = 0;
 	for i in 0..v.len() {
-		let inc = v[i].windows(2).filter(|x| (x[1] - x[0]) > 0).count();
-		let dec = v[i].windows(2).filter(|x| (x[0] - x[1]) > 0).count();
-	}
+		for j in 0..v[i].len() {
+			let inc = v[i].clone()
+				.iter()
+				.enumerate()
+				.filter(|(k, _)| j != *k)
+				.map(|(_, val)| *val)
+				.collect::<Vec<i64>>()
+				.windows(2)
+				.all(|p| (p[1] > p[0]) && (p[1] - p[0] > 0) && (p[1] - p[0] < 4));
 
+			let dec = v[i].clone()
+				.iter()
+				.enumerate()
+				.filter(|(k, _)| j != *k)
+				.map(|(_, val)| *val)
+				.collect::<Vec<i64>>()
+				.windows(2)
+				.all(|p| (p[0] > p[1]) && (p[0] - p[1] > 0) && (p[0] - p[1] < 4));
+
+			if inc || dec {
+				sum2 += 1;
+				break;
+			}
+			
+		}
+	}
     println!("P1: {sum}");
 	println!("P2: {sum2}");
 }
