@@ -60,7 +60,7 @@ impl State {
 
 
 fn main() {
-	// let read: String = String::from("xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))");
+	//let read: String = String::from("xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))");
 	let read = std::fs::read_to_string("input/input.txt").expect("Couldnt read file");
 	let r = Regex::new(r"mul\((\d+),(\d+)\)").expect("Unexpected error");
 	let mut valid: Vec<(i64, (i64, i64))> = Vec::new();
@@ -79,41 +79,27 @@ fn main() {
 		}
 	}
 
-	let do_reg = Regex::new(r"do\(\)").unwrap();
+	let r2 = Regex::new(r"(?:mul\((?<f0>\d+),(?<f1>\d+)\))|(?<yes>do\(\))|(?<no>don't\(\))").unwrap();
+	let mut valid2: Vec<(i64, i64)> = Vec::new();
+	let mut active = true;
+	for cap in r2.captures_iter(&read) {
+		if cap.name("yes").is_some() {
+			active = true;
+		}
+		if cap.name("no").is_some() {
+			active = false;
+		}
 
-	let mut dos: Vec<i64> = do_reg.find_iter(&read).map(|cap| cap.range().start as i64).collect::<Vec<i64>>();
-	let don_reg = Regex::new(r"don't\(\)").unwrap();
-	let mut dons: Vec<i64> = don_reg.find_iter(&read).map(|cap| cap.range().start as i64).collect::<Vec<i64>>();
-
-	dos.sort();
-	dons.sort();
-
-	let mut dos_q = VecDeque::from_iter(dos.iter());
-	dos_q.push_front(&0);
-	let mut dons_q = VecDeque::from_iter(dons.iter());
-	let mut ranges: Vec<(Range<i64>, bool)> = Vec::new();
-	let mut last = 0; 
-	let mut last_mode = true;
-
-
-	while !dons_q.is_empty() && !dos_q.is_empty() {
-		if dons_q.front().is_some() && dos_q.front().is_some() && dons_q.front() < dos_q.front() {
-			ranges.push((last..*dons_q.pop_front().unwrap(), last_mode))
+		if active && cap.name("f0").is_some() && cap.name("f1").is_some() {
+			let f0 = cap.name("f0").unwrap().as_str();
+			let f1 = cap.name("f1").unwrap().as_str();
+			valid2.push((f0.parse().unwrap(), f1.parse().unwrap()))
 		}
 	}
 
 
-	let max_i = valid[valid.len()-1].0;
-	if ranges[ranges.len()-1].1 {
-		ranges.push((ranges[ranges.len()-1].0.end..max_i+1, true))
-	} else {
-		ranges.push((ranges[ranges.len()-1].0.end..max_i+1, false))
-	}
-
-
-	println!("{}, {}", dos.len(), dons.len());
 	let result_p1: i64 = valid.iter().map(|x| x.1.0 * x.1.1).sum();
-	let result_p2: i64 = valid.iter().filter(|val| ranges.iter().any(|x| x.1 && x.0.contains(&val.0))).map(|x| x.1.0 * x.1.1).sum();
+	let result_p2: i64 = valid2.iter().map(|x| x.0 * x.1).sum();
 
 	println!("Part 1: {result_p1}\nPart 2: {result_p2}");
 }
